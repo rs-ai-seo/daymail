@@ -1,24 +1,32 @@
-
+from flask import Flask
 import smtplib
-from email.mime.text import MIMEText
 import os
+from email.mime.text import MIMEText
 
-SMTP_HOST = os.getenv("SMTP_HOST")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASS = os.getenv("SMTP_PASS")
-TO_EMAIL = "guy@r-s.co.il"
+app = Flask(__name__)
 
-msg = MIMEText("שלום גיא,\n\nזהו מייל בדיקה ממערכת ה-SEO שלך. אם קיבלת את ההודעה הזו, תכתוב לי כאן: '✔️ הגיע'.\n\nתודה,\nהמערכת שלך")
-msg["Subject"] = "בדיקה 1 – האם המייל הזה הגיע?"
-msg["From"] = SMTP_USER
-msg["To"] = TO_EMAIL
+@app.route("/send_test_email")
+def send_email():
+    try:
+        SMTP_HOST = os.environ.get("SMTP_HOST")
+        SMTP_PORT = int(os.environ.get("SMTP_PORT"))
+        SMTP_USER = os.environ.get("SMTP_USER")
+        SMTP_PASS = os.environ.get("SMTP_PASS")
+        TO_EMAIL = os.environ.get("TO_EMAIL")
 
-try:
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.send_message(msg)
-    print("✔️ מייל נשלח בהצלחה.")
-except Exception as e:
-    print("❌ שגיאה בשליחת מייל:", e)
+        msg = MIMEText("המייל הזה נשלח אוטומטית מהמערכת שלך. אם קיבלת אותו, הכל עובד כראוי.")
+        msg["Subject"] = "בדיקת מערכת SEO אוטומטית"
+        msg["From"] = SMTP_USER
+        msg["To"] = TO_EMAIL
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+
+        return "✔️ נשלח מייל בהצלחה!"
+    except Exception as e:
+        return f"❌ שגיאה בשליחה: {str(e)}"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
